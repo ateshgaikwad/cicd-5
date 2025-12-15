@@ -1,0 +1,59 @@
+pipeline {
+    agent any
+
+    environment {
+        IMAGE = "ateshgaikwad/cicd-4"
+        EC2_HOST = "3.109.58.78"
+    }
+
+    stages {
+
+        stage('Checkout') {
+            steps {
+                git branch: 'main', url: 'https://github.com/ateshgaikwad/cicd-3.git'
+            }
+        }
+
+        stage('Build Docker Image') {
+            steps {
+                sh "docker build -t $IMAGE:${env.BUILD_NUMBER} ."
+            }
+        }
+
+        stage('Login to Docker Hub') {
+            steps {
+                withCredentials([usernamePassword(credentialsId: 'dockerhub',
+                                                 usernameVariable: 'USERNAME',
+                                                 passwordVariable: 'PASSWORD')]) {
+                    sh "echo \"$PASSWORD\" | docker login -u \"$USERNAME\" --password-stdin"
+                }
+            }
+        }
+
+        stage('Push Image') {
+            steps {
+                sh "docker push $IMAGE:${env.BUILD_NUMBER}"
+            }
+        }
+
+        stage('Deploy to EC2') {
+            steps {
+                sshagent(['ec2-ssh']) {
+                    sh """
+                    ssh -o StrictHostKeyChecking=no ubuntu@$EC2_HOST '
+                        docker pull $IMAGE:${env.BUILD_NUMBER} &&
+                        docker stop app || true &&
+                        docker rm app || true &&
+                        docker run -d -p 3000:3000 --name app $IMAGE:${env.BUILD_NUMBER}
+                    '
+                    """
+                }
+            }
+        }
+    }
+
+    post {
+        success { echo "CI/CD Pipeline Completed Successfully!" }
+        failure { echo "Pipeline Failed!" }
+    }
+}
