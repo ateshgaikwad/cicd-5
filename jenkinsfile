@@ -54,11 +54,6 @@ pipeline {
                 }
         }
     }
-
-    post {
-        success { echo "Pipeline Success: ${env.BRANCH_NAME}" }
-        failure { echo "Pipeline Failed: ${env.BRANCH_NAME}" }
-    }
 }
 
 }
