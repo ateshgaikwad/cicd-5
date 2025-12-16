@@ -26,24 +26,6 @@ pipeline {
                 sh "docker push $IMAGE:${env.BUILD_NUMBER}"
             }
         }
-
-        stage('Deploy to Dev') {
-            when { branch 'dev' }
-            steps {
-                sh "echo 'Deploying to Development...'"
-            }
-        }
-
-        stage('Deploy to Production') {
-            when { branch 'main' }
-            input {
-                message "Deploy to Production?"
-                ok "Yes, Deploy"
-            }
-            steps {
-                sh "echo 'Deploying to Production...'"
-            }
-        }
     }
 
     post {
