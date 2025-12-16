@@ -27,23 +27,24 @@ pipeline {
             }
         }
 
-        stage('Deploy to Dev') {
-            when { branch 'dev' }
-            steps {
-                sh "echo 'Deploying to Development...'"
-            }
-        }
-
-        stage('Deploy to Production') {
+       stage('Deploy to DEV') {
             when { branch 'main' }
             input {
-                message "Deploy to Production?"
+                message "Deploy to DEV?"
                 ok "Yes, Deploy"
             }
-            steps {
-                sh "echo 'Deploying to Production...'"
-            }
+            steps { 
+                    sh """
+                        docker pull $IMAGE:${env.BUILD_NUMBER} &&
+                        docker stop app || true &&
+                        docker rm app || true &&
+                        docker run -d -p 3000:3000 --name app $IMAGE:${env.BUILD_NUMBER}
+                    '
+                    """
+            
         }
+    }
+
     }
 
     post {
