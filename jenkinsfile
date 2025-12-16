@@ -4,6 +4,7 @@ pipeline {
     environment {
         IMAGE = "ateshgaikwad/cicd-5"
         ENV = "${env.BRANCH_NAME}"
+        EC2_HOST = "52.66.40.238"
     }
 
     stages {
@@ -41,8 +42,16 @@ pipeline {
                 ok "Yes, Deploy"
             }
             steps {
-                sh "echo 'Deploying to Production...'"
-            }
+                sshagent(['ec2-ssh']) {
+                    sh """
+                    ssh -o StrictHostKeyChecking=no ubuntu@$EC2_HOST '
+                        docker pull $IMAGE:${env.BUILD_NUMBER} &&
+                        docker stop app || true &&
+                        docker rm app || true &&
+                        docker run -d -p 3000:3000 --name app $IMAGE:${env.BUILD_NUMBER}
+                    '
+                    """
+                }
         }
     }
 
