@@ -4,7 +4,7 @@ pipeline {
     environment {
         IMAGE = "ateshgaikwad/cicd-5"
         ENV = "${env.BRANCH_NAME}"
-        EC2_HOST = "52.66.40.238"
+        EC2_HOST = "3.108.65.8"
     }
 
     stages {
